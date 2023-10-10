@@ -21,7 +21,7 @@ const idToColumnText: {
 	done: 'Done'
 };
 
-export function Column({ id, todos, index }: ColumnProps) {
+export function ColumnComponent({ id, todos, index }: ColumnProps) {
 	return (
 		<Draggable draggableId={id} index={index}>
 			{provided => (

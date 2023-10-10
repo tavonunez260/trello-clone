@@ -1,12 +1,18 @@
+import { doc, setDoc } from '@firebase/firestore';
 import { create } from 'zustand';
 
+import { db } from '@/firebase';
 import { getTodosGroupedByColumn } from '@/lib';
 import { TypedColumn } from '@/types';
-import { Board, Column } from '@/typings';
+import { Board, Column, Todo } from '@/typings';
 
 interface BoardState {
 	board: Board;
 	getBoard: () => void;
+	setBoardState: (board: Board) => void;
+	updateTodoInDB: (todo: Todo, columnId: TypedColumn) => void;
+	searchString: string;
+	setSearchString: (searchString: string) => void;
 }
 
 export const useBoardStore = create<BoardState>(set => ({
@@ -16,5 +22,16 @@ export const useBoardStore = create<BoardState>(set => ({
 	getBoard: async () => {
 		const board = await getTodosGroupedByColumn();
 		set({ board });
-	}
+	},
+	setBoardState: (board: Board) => set({ board }),
+	updateTodoInDB: async (updatedTodo, columnId) => {
+		const todoRef = doc(db, 'todos', updatedTodo.id);
+		await setDoc(
+			todoRef,
+			{ title: updatedTodo.title, status: columnId, createdAt: new Date().getTime() },
+			{ merge: true }
+		);
+	},
+	searchString: '',
+	setSearchString: (searchString: string) => set({ searchString })
 }));

@@ -1,4 +1,4 @@
-export * from './Board';
-export * from './Column';
-export * from './Header';
+export * from './BoardComponent';
+export * from './ColumnComponent';
+export * from './HeaderComponent';
 export * from './TodoCard';

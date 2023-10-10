@@ -1,10 +1,10 @@
-import { Board, Header } from '@/components';
+import { BoardComponent, HeaderComponent } from '@/components';
 
 export default function Home() {
 	return (
 		<main>
-			<Header />
-			<Board />
+			<HeaderComponent />
+			<BoardComponent />
 		</main>
 	);
 }

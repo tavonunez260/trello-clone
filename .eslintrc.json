@@ -34,14 +34,6 @@
 				}
 			}
 		],
-//		"no-unused-vars": [
-//			"error",
-//			{
-//				"ignoreRestSiblings": true,
-//				"destructuredArrayIgnorePattern": "[A-Z]",
-//				"caughtErrors": "none"
-//			}
-//		],
 		"no-use-before-define": [
 			"error",
 			{
@@ -57,6 +49,14 @@
 				"component": true,
 				"html": true
 			}
-		]
+		],
+		"react/jsx-sort-props": ["error", {
+			"ignoreCase": true,
+			"callbacksLast": true,
+			"shorthandFirst": false,
+			"shorthandLast": false,
+			"noSortAlphabetically": false,
+			"reservedFirst": true
+		}]
 	}
 }
