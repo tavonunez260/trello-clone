@@ -21,7 +21,7 @@ type TodoCardType = {
 export function TodoCard({
 	todo,
 	index,
-  id,
+	id,
 	innerRef,
 	draggableProps,
 	dragHandleProps

@@ -10,6 +10,7 @@ interface BoardState {
 	board: Board;
 	getBoard: () => void;
 	setBoardState: (board: Board) => void;
+	saveColumnOrder: (order: TypedColumn[]) => void;
 	updateTodoInDB: (todo: Todo, columnId: TypedColumn) => void;
 	searchString: string;
 	setSearchString: (searchString: string) => void;
@@ -24,6 +25,10 @@ export const useBoardStore = create<BoardState>(set => ({
 		set({ board });
 	},
 	setBoardState: (board: Board) => set({ board }),
+	saveColumnOrder: async (order: TypedColumn[]) => {
+		const columnRef = doc(db, 'todos', 'orderId');
+		await setDoc(columnRef, { order }, { merge: true });
+	},
 	updateTodoInDB: async (updatedTodo, columnId) => {
 		const todoRef = doc(db, 'todos', updatedTodo.id);
 		await setDoc(

@@ -13,17 +13,18 @@ export const getTodosGroupedByColumn = async () => {
 		getCountFromServer(todoCollectionRef)
 	]);
 
+	const todoColumns = todoDataSnapshot.docs.find(doc => doc.id === 'orderId')?.data();
 	const todos = {
-		documents: todoDataSnapshot.docs.map(doc => ({
-			id: doc.id,
-			...(doc.data() as TodoResponse['data'])
-		})),
+		documents: todoDataSnapshot.docs
+			.filter(doc => doc.id !== 'orderId')
+			.map(doc => ({
+				id: doc.id,
+				...(doc.data() as TodoResponse['data'])
+			})),
 		total: todoCountSnapshot.data().count
 	};
 
-	const todoColumns = [TypedColumn.TO_DO, TypedColumn.IN_PROGRESS, TypedColumn.DONE];
-
-	const initialColumns = todoColumns.reduce((acc, columnType) => {
+	const initialColumns = (todoColumns!.order as TypedColumn[]).reduce((acc, columnType) => {
 		acc.set(columnType, {
 			id: columnType,
 			todos: []
@@ -46,12 +47,5 @@ export const getTodosGroupedByColumn = async () => {
 		return acc;
 	}, initialColumns);
 
-	// Sort the columns based on the predefined order
-	const sortedColumns = new Map(
-		Array.from(columns.entries()).sort(
-			(a, b) => todoColumns.indexOf(a[0]) - todoColumns.indexOf(b[0])
-		)
-	);
-
-	return { columns: sortedColumns };
+	return { columns };
 };

@@ -9,10 +9,11 @@ import { TypedColumn } from '@/types';
 import { Column, Todo } from '@/typings';
 
 export function BoardComponent() {
-	const [board, getBoard, setBoardState, updateTodoInDB] = useBoardStore(state => [
+	const [board, getBoard, setBoardState, saveColumnOrder, updateTodoInDB] = useBoardStore(state => [
 		state.board,
 		state.getBoard,
 		state.setBoardState,
+		state.saveColumnOrder,
 		state.updateTodoInDB
 	]);
 
@@ -79,6 +80,8 @@ export function BoardComponent() {
 
 		if (type === 'column') {
 			newColumns = handleColumnDrag(source.index, destination.index);
+			const columnOrder = Array.from(newColumns.keys());
+			saveColumnOrder(columnOrder);
 		} else {
 			const columns = Array.from(board.columns);
 			const startCol = columns[Number(source.droppableId)][1];
@@ -99,7 +102,6 @@ export function BoardComponent() {
 	useEffect(() => {
 		getBoard();
 	}, [getBoard]);
-	console.log(board);
 
 	return (
 		<DragDropContext onDragEnd={handleOnDragEnd}>
