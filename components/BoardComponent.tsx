@@ -8,13 +8,15 @@ import { useBoardStore } from '@/store';
 import { Column } from '@/typings';
 
 export function BoardComponent() {
-	const [board, getBoard, setBoardState, saveColumnOrder, updateTodoInDB] = useBoardStore(state => [
-		state.board,
-		state.getBoard,
-		state.setBoardState,
-		state.saveColumnOrder,
-		state.updateTodoInDB
-	]);
+	const [board, getBoard, setBoardState, saveColumnOrder, updateOrder, updateTodoInDB] =
+		useBoardStore(state => [
+			state.board,
+			state.getBoard,
+			state.setBoardState,
+			state.updateColumnOrder,
+			state.updateOrder,
+			state.updateTodoInDB
+		]);
 
 	const handleOnDragEnd = (result: DropResult) => {
 		const { destination, source, type } = result;
@@ -49,36 +51,33 @@ export function BoardComponent() {
 
 			const newTodos = startCol.todos;
 			const [todoMoved] = newTodos.splice(source.index, 1);
-			console.log(todoMoved.id);
+			const newColumns = new Map(board.columns);
+
 			if (startCol.id === finishCol.id) {
 				//Same column
 				newTodos.splice(destination.index, 0, todoMoved);
-
-				const newColumns = new Map(board.columns);
 				const newCol = {
 					id: startCol.id,
 					todos: newTodos
 				};
+				updateOrder(newCol.todos.map((todo, index) => ({ ...todo, order: index })));
 				newColumns.set(startCol.id, newCol);
-				setBoardState({ ...board, columns: newColumns });
 			} else {
 				//Dragging to another column
 				const finishTodos = Array.from(finishCol.todos);
 				finishTodos.splice(destination.index, 0, todoMoved);
-
-				const newColumns = new Map(board.columns);
 				const newCol = {
 					id: startCol.id,
 					todos: newTodos
 				};
+				updateOrder(finishTodos.map((todo, index) => ({ ...todo, order: index })));
 				newColumns.set(startCol.id, newCol);
 				newColumns.set(finishCol.id, {
 					id: finishCol.id,
 					todos: finishTodos
 				});
-
-				setBoardState({ ...board, columns: newColumns });
 			}
+			setBoardState({ ...board, columns: newColumns });
 			updateTodoInDB(todoMoved, finishCol.id);
 		}
 	};

@@ -20,7 +20,8 @@ export const getTodosGroupedByColumn = async () => {
 			.map(doc => ({
 				id: doc.id,
 				...(doc.data() as TodoResponse['data'])
-			})),
+			}))
+			.sort((a, b) => a.order - b.order),
 		total: todoCountSnapshot.data().count
 	};
 
@@ -41,6 +42,7 @@ export const getTodosGroupedByColumn = async () => {
 				createdAt: todo.createdAt,
 				title: todo.title,
 				status: todo.status,
+				order: todo.order,
 				...(todo.image && { image: todo.image })
 			});
 		}

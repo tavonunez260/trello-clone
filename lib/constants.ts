@@ -1,23 +1,23 @@
 import { TypedColumn } from '@/types';
 
-export const types: { id: TypedColumn; name: string; description: string; color: string }[] = [
+export const types: { color: string; description: string; id: TypedColumn; name: string }[] = [
 	{
 		id: TypedColumn.TO_DO,
 		name: 'Todo',
 		description: 'A new task to be completed',
-		color: 'bg-red-500'
+		color: 'red'
 	},
 	{
 		id: TypedColumn.IN_PROGRESS,
 		name: 'In Progress',
 		description: 'A task that is currently being worked on',
-		color: 'bg-yellow-500'
+		color: 'yellow'
 	},
 	{
 		id: TypedColumn.DONE,
 		name: 'Done',
 		description: 'A task that has been completed',
-		color: 'bg-green-500'
+		color: 'green'
 	}
 ];
 

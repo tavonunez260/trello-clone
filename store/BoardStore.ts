@@ -1,4 +1,4 @@
-import { doc, setDoc } from '@firebase/firestore';
+import { doc, setDoc, updateDoc } from '@firebase/firestore';
 import { create } from 'zustand';
 
 import { db } from '@/firebase';
@@ -12,13 +12,14 @@ interface BoardState {
 	image: File | null;
 	newTaskInput: string;
 	newTaskType: TypedColumn | '';
-	saveColumnOrder: (order: TypedColumn[]) => void;
 	searchString: string;
 	setBoardState: (board: Board) => void;
 	setImage: (value: File | null) => void;
 	setNewTaskInput: (value: string) => void;
 	setNewTaskType: (value: TypedColumn | '') => void;
 	setSearchString: (searchString: string) => void;
+	updateColumnOrder: (order: TypedColumn[]) => void;
+	updateOrder: (todos: Todo[]) => void;
 	updateTodoInDB: (todo: Todo, columnId: TypedColumn) => void;
 }
 
@@ -31,9 +32,9 @@ export const useBoardStore = create<BoardState>(set => ({
 		set({ board });
 	},
 	setBoardState: (board: Board) => set({ board }),
-	saveColumnOrder: async (order: TypedColumn[]) => {
+	updateColumnOrder: async (order: TypedColumn[]) => {
 		const columnRef = doc(db, 'todos', 'orderId');
-		await setDoc(columnRef, { order }, { merge: true });
+		await updateDoc(columnRef, { order });
 	},
 	updateTodoInDB: async (updatedTodo, columnId) => {
 		const todoRef = doc(db, 'todos', updatedTodo.id);
@@ -50,5 +51,13 @@ export const useBoardStore = create<BoardState>(set => ({
 	newTaskType: '',
 	setNewTaskType: (newTaskType: TypedColumn | '') => set({ newTaskType }),
 	image: null,
-	setImage: (image: File | null) => set({ image })
+	setImage: (image: File | null) => set({ image }),
+	updateOrder: (todos: Todo[]) => {
+		todos.forEach(async todo => {
+			const todoRef = doc(db, 'todos', todo.id);
+			await updateDoc(todoRef, {
+				order: todo.order
+			});
+		});
+	}
 }));

@@ -6,16 +6,17 @@ interface Image {
 }
 
 interface Todo {
-	id: string;
-	title: string;
-	status: TypedColumn;
-	image?: Image;
 	createdAt: number;
+	id: string;
+	image?: Image;
+	order: number;
+	status: TypedColumn;
+	title: string;
 }
 
 interface TodoResponse {
+	data: { createdAt: number; image?: Image; order: number; status: TypedColumn; title: string };
 	id: string;
-	data: { title: string; status: TypedColumn; image?: Image; createdAt: number };
 }
 
 interface Column {
