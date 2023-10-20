@@ -23,7 +23,10 @@ const idToColumnText: {
 };
 
 export function ColumnComponent({ id, index, todos }: ColumnProps) {
-	const [searchString] = useBoardStore(state => [state.searchString]);
+	const [searchString, setNewTaskType] = useBoardStore(state => [
+		state.searchString,
+		state.setNewTaskType
+	]);
 	const openModal = useModalStore(state => state.openModal);
 
 	return (
@@ -76,7 +79,13 @@ export function ColumnComponent({ id, index, todos }: ColumnProps) {
 									})}
 									{provided.placeholder}
 									<div className="flex items-end justify-end p-2">
-										<button className="text-green-500 hover:text-green-600" onClick={openModal}>
+										<button
+											className="text-green-500 hover:text-green-600"
+											onClick={() => {
+												openModal();
+												setNewTaskType(id);
+											}}
+										>
 											<PlusCircleIcon className="h-10 w-10" />
 										</button>
 									</div>
