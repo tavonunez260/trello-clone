@@ -3,3 +3,8 @@ export enum TypedColumn {
 	IN_PROGRESS = 'inProgress',
 	DONE = 'done'
 }
+
+export type AddTaskForm = {
+	name: string;
+	type: TypedColumn | '';
+};

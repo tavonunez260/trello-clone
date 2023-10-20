@@ -5,7 +5,9 @@
 		"plugin:@typescript-eslint/recommended"
 	],
 	"plugins": [
-		"prettier"
+		"prettier",
+		"react-hooks",
+		"sort-destructure-keys"
 	],
 	"rules": {
 		"@typescript-eslint/no-unused-vars": ["error", {
@@ -13,6 +15,11 @@
 			"args": "after-used",
 			"ignoreRestSiblings": true,
 			"argsIgnorePattern": "^_"
+		}],
+		"@typescript-eslint/member-ordering": ["error", {
+			"default": {
+				"order": "alphabetically"
+			}
 		}],
 		"prettier/prettier": "error",
 		"arrow-body-style": ["error", "as-needed"],
@@ -57,6 +64,11 @@
 			"shorthandLast": false,
 			"noSortAlphabetically": false,
 			"reservedFirst": true
+		}],
+		"react-hooks/rules-of-hooks": "error",
+		"react-hooks/exhaustive-deps": "warn",
+		"sort-destructure-keys/sort-destructure-keys": ["error", {
+			"caseSensitive": false
 		}]
 	}
 }

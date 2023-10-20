@@ -9,11 +9,17 @@ import { Board, Column, Todo } from '@/typings';
 interface BoardState {
 	board: Board;
 	getBoard: () => void;
-	setBoardState: (board: Board) => void;
+	image: File | null;
+	newTaskInput: string;
+	newTaskType: TypedColumn | '';
 	saveColumnOrder: (order: TypedColumn[]) => void;
-	updateTodoInDB: (todo: Todo, columnId: TypedColumn) => void;
 	searchString: string;
+	setBoardState: (board: Board) => void;
+	setImage: (value: File | null) => void;
+	setNewTaskInput: (value: string) => void;
+	setNewTaskType: (value: TypedColumn | '') => void;
 	setSearchString: (searchString: string) => void;
+	updateTodoInDB: (todo: Todo, columnId: TypedColumn) => void;
 }
 
 export const useBoardStore = create<BoardState>(set => ({
@@ -38,5 +44,11 @@ export const useBoardStore = create<BoardState>(set => ({
 		);
 	},
 	searchString: '',
-	setSearchString: (searchString: string) => set({ searchString })
+	setSearchString: (searchString: string) => set({ searchString }),
+	newTaskInput: '',
+	setNewTaskInput: (newTaskInput: string) => set({ newTaskInput }),
+	newTaskType: '',
+	setNewTaskType: (newTaskType: TypedColumn | '') => set({ newTaskType }),
+	image: null,
+	setImage: (image: File | null) => set({ image })
 }));

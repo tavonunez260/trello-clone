@@ -5,8 +5,7 @@ import { DragDropContext, Droppable, DropResult } from 'react-beautiful-dnd';
 
 import { ColumnComponent } from '@/components';
 import { useBoardStore } from '@/store';
-import { TypedColumn } from '@/types';
-import { Column, Todo } from '@/typings';
+import { Column } from '@/typings';
 
 export function BoardComponent() {
 	const [board, getBoard, setBoardState, saveColumnOrder, updateTodoInDB] = useBoardStore(state => [
@@ -17,86 +16,71 @@ export function BoardComponent() {
 		state.updateTodoInDB
 	]);
 
-	const reorder = (
-		list: Todo[] | [TypedColumn, Column][],
-		startIndex: number,
-		endIndex: number
-	): typeof list => {
-		if (list.length === 0) return list; // Empty list
-
-		if ((list[0] as Todo).id !== undefined) {
-			const result = Array.from(list as Todo[]);
-			const [removed] = result.splice(startIndex, 1);
-			result.splice(endIndex, 0, removed);
-			return result;
-		} else {
-			const result = Array.from(list as [TypedColumn, Column][]);
-			const [removed] = result.splice(startIndex, 1);
-			result.splice(endIndex, 0, removed);
-			return result;
-		}
-	};
-
-	const handleColumnDrag = (sourceIndex: number, destinationIndex: number) => {
-		const entries = Array.from(board.columns.entries());
-		const reorderedEntries = reorder(entries, sourceIndex, destinationIndex) as [
-			TypedColumn,
-			Column
-		][];
-		return new Map(reorderedEntries);
-	};
-
-	const handleTodoDrag = (
-		startCol: Column,
-		finishCol: Column,
-		sourceIndex: number,
-		destinationIndex: number
-	) => {
-		const newStartTodos = Array.from(startCol.todos);
-		const [movedTodo] = newStartTodos.splice(sourceIndex, 1);
-
-		let newFinishTodos;
-
-		if (startCol.id === finishCol.id) {
-			newFinishTodos = reorder(newStartTodos, sourceIndex, destinationIndex);
-		} else {
-			newFinishTodos = [...finishCol.todos];
-			newFinishTodos.splice(destinationIndex, 0, movedTodo);
-		}
-
-		const newColumns = new Map(board.columns);
-		newColumns.set(startCol.id, { ...startCol, todos: newStartTodos });
-		newColumns.set(finishCol.id, { ...finishCol, todos: newFinishTodos as Todo[] });
-
-		return newColumns;
-	};
-
 	const handleOnDragEnd = (result: DropResult) => {
 		const { destination, source, type } = result;
-
 		if (!destination) return;
 
-		let newColumns;
-
+		//Handle column drag
 		if (type === 'column') {
-			newColumns = handleColumnDrag(source.index, destination.index);
-			const columnOrder = Array.from(newColumns.keys());
-			saveColumnOrder(columnOrder);
-		} else {
-			const columns = Array.from(board.columns);
-			const startCol = columns[Number(source.droppableId)][1];
-			const finishCol = columns[Number(destination.droppableId)][1];
-
-			if (!startCol || !finishCol) return;
-			if (source.index === destination.index && startCol.id === finishCol.id) return;
-
-			newColumns = handleTodoDrag(startCol, finishCol, source.index, destination.index);
-
-			const todoMoved = startCol.todos[source.index];
-			updateTodoInDB(todoMoved, finishCol.id);
+			const entries = Array.from(board.columns.entries());
+			const [removed] = entries.splice(source.index, 1);
+			entries.splice(destination.index, 0, removed);
+			const rearrangedColumns = new Map(entries);
+			setBoardState({ ...board, columns: rearrangedColumns });
+			saveColumnOrder(Array.from(rearrangedColumns).map(([key]) => key));
 		}
 
-		setBoardState({ ...board, columns: newColumns });
+		if (!isNaN(Number(source.droppableId)) && !isNaN(Number(destination.droppableId))) {
+			const columns = Array.from(board.columns);
+			const startColIndex = columns[Number(source.droppableId)];
+			const finishColIndex = columns[Number(destination.droppableId)];
+
+			const startCol: Column = {
+				id: startColIndex[0],
+				todos: startColIndex[1].todos
+			};
+			const finishCol: Column = {
+				id: finishColIndex[0],
+				todos: finishColIndex[1].todos
+			};
+
+			if (!startCol || !finishCol) return;
+			if (source.index === destination.index && startCol === finishCol) return;
+
+			const newTodos = startCol.todos;
+			const [todoMoved] = newTodos.splice(source.index, 1);
+			console.log(todoMoved.id);
+			if (startCol.id === finishCol.id) {
+				//Same column
+				newTodos.splice(destination.index, 0, todoMoved);
+
+				const newColumns = new Map(board.columns);
+				const newCol = {
+					id: startCol.id,
+					todos: newTodos
+				};
+				newColumns.set(startCol.id, newCol);
+				setBoardState({ ...board, columns: newColumns });
+			} else {
+				//Dragging to another column
+				const finishTodos = Array.from(finishCol.todos);
+				finishTodos.splice(destination.index, 0, todoMoved);
+
+				const newColumns = new Map(board.columns);
+				const newCol = {
+					id: startCol.id,
+					todos: newTodos
+				};
+				newColumns.set(startCol.id, newCol);
+				newColumns.set(finishCol.id, {
+					id: finishCol.id,
+					todos: finishTodos
+				});
+
+				setBoardState({ ...board, columns: newColumns });
+			}
+			updateTodoInDB(todoMoved, finishCol.id);
+		}
 	};
 
 	useEffect(() => {

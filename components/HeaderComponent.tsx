@@ -1,6 +1,6 @@
 'use client';
 
-import { MagnifyingGlassIcon, UserCircleIcon } from '@heroicons/react/24/solid';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/solid';
 import Image from 'next/image';
 import Avatar from 'react-avatar';
 
@@ -20,6 +20,7 @@ export function HeaderComponent() {
 					alt="Trello logo"
 					className="w-44 md:w-56 pb-10 md:pb-0 object-contain"
 					height={100}
+					priority={true}
 					src="https://links.papareact.com/c2cdd5"
 					width={300}
 				/>
@@ -39,13 +40,6 @@ export function HeaderComponent() {
 					</form>
 					<Avatar color="#0055D1" name="Gustavo Nunez" round size="50" />
 				</div>
-			</div>
-
-			<div className="flex items-center justify-center px-5 py-2 md:py-5">
-				<p className="flex items-center text-sm font-light p-5 shadow-xl rounded-xl w-fit bg-white italic max-w-3xl text-customBlue">
-					<UserCircleIcon className="inline-block h-10 w-10 text-customBlue mr-1" />
-					GPT is summarizing your tasks for the day...
-				</p>
 			</div>
 		</header>
 	);
