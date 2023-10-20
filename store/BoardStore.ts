@@ -1,4 +1,5 @@
-import { doc, setDoc, updateDoc } from '@firebase/firestore';
+import { addDoc, collection, doc, setDoc, updateDoc } from '@firebase/firestore';
+import { getDownloadURL, getStorage, ref, uploadBytes } from '@firebase/storage';
 import { create } from 'zustand';
 
 import { db } from '@/firebase';
@@ -7,23 +8,41 @@ import { TypedColumn } from '@/types';
 import { Board, Column, Todo } from '@/typings';
 
 interface BoardState {
+	addTask: (title: string, status: TypedColumn, image?: File | null) => void;
 	board: Board;
 	getBoard: () => void;
 	image: File | null;
 	newTaskInput: string;
-	newTaskType: TypedColumn | '';
+	newTaskType: TypedColumn;
 	searchString: string;
 	setBoardState: (board: Board) => void;
 	setImage: (value: File | null) => void;
 	setNewTaskInput: (value: string) => void;
-	setNewTaskType: (value: TypedColumn | '') => void;
+	setNewTaskType: (value: TypedColumn) => void;
 	setSearchString: (searchString: string) => void;
 	updateColumnOrder: (order: TypedColumn[]) => void;
 	updateOrder: (todos: Todo[]) => void;
 	updateTodoInDB: (todo: Todo, columnId: TypedColumn) => void;
 }
 
-export const useBoardStore = create<BoardState>(set => ({
+export const useBoardStore = create<BoardState>((set, getState) => ({
+	addTask: async (title: string, status: TypedColumn, image?: File | null) => {
+		let imageUrl = '';
+		if (image) {
+			const storage = getStorage();
+			const newTodoImageRef = ref(storage, `${image?.name}`);
+			await uploadBytes(newTodoImageRef, image);
+			imageUrl = await getDownloadURL(newTodoImageRef);
+		}
+
+		await addDoc(collection(db, 'todos'), {
+			title,
+			status,
+			createdAt: new Date().getTime(),
+			order: getState().board.columns.get(status)?.todos.length,
+			image: imageUrl
+		});
+	},
 	board: {
 		columns: new Map<TypedColumn, Column>()
 	},
@@ -48,8 +67,8 @@ export const useBoardStore = create<BoardState>(set => ({
 	setSearchString: (searchString: string) => set({ searchString }),
 	newTaskInput: '',
 	setNewTaskInput: (newTaskInput: string) => set({ newTaskInput }),
-	newTaskType: '',
-	setNewTaskType: (newTaskType: TypedColumn | '') => set({ newTaskType }),
+	newTaskType: TypedColumn.TO_DO,
+	setNewTaskType: (newTaskType: TypedColumn) => set({ newTaskType }),
 	image: null,
 	setImage: (image: File | null) => set({ image }),
 	updateOrder: (todos: Todo[]) => {

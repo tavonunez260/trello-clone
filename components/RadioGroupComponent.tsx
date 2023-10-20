@@ -10,8 +10,8 @@ import { AddTaskForm, TypedColumn } from '@/types';
 interface RadioGroupComponentType {
 	control: Control<AddTaskForm>;
 	error: FieldError | undefined;
-	newTaskType: TypedColumn | '';
-	setNewTaskType: (value: TypedColumn | '') => void;
+	newTaskType: TypedColumn;
+	setNewTaskType: (value: TypedColumn) => void;
 }
 
 export function RadioGroupComponent({

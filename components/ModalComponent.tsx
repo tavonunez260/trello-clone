@@ -3,7 +3,7 @@
 import { Dialog, Transition } from '@headlessui/react';
 import { PhotoIcon } from '@heroicons/react/24/solid';
 import Image from 'next/image';
-import { Fragment, useRef } from 'react';
+import { Fragment, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { RadioGroupComponent } from '@/components';
@@ -12,14 +12,15 @@ import { useBoardStore, useModalStore } from '@/store';
 import { AddTaskForm } from '@/types';
 
 export function ModalComponent() {
-	const [newTaskInput, newTaskType, image, setNewTaskInput, setNewTaskType, setImage] =
+	const [addTask, image, newTaskInput, newTaskType, setImage, setNewTaskInput, setNewTaskType] =
 		useBoardStore(state => [
+			state.addTask,
+			state.image,
 			state.newTaskInput,
 			state.newTaskType,
-			state.image,
+			state.setImage,
 			state.setNewTaskInput,
-			state.setNewTaskType,
-			state.setImage
+			state.setNewTaskType
 		]);
 	const [isOpen, closeModal] = useModalStore(state => [state.isOpen, state.closeModal]);
 	const imagePickerRef = useRef<HTMLInputElement>(null);
@@ -27,17 +28,21 @@ export function ModalComponent() {
 		control,
 		formState: { errors },
 		handleSubmit,
-		register
+		register,
+		setValue
 	} = useForm<AddTaskForm>({
 		defaultValues: {
-			name: newTaskInput,
-			type: newTaskType
+			title: newTaskInput
 		}
 	});
 
 	const onSubmit = (data: AddTaskForm) => {
-		console.log(data);
+		addTask(data.title, data.type, image);
 	};
+
+	useEffect(() => {
+		setValue('type', newTaskType);
+	}, [newTaskType, setValue]);
 
 	return (
 		// Use the `Transition` component at the root level
@@ -76,7 +81,7 @@ export function ModalComponent() {
 								</Dialog.Title>
 								<div className="mt-2">
 									<input
-										{...register('name', {
+										{...register('title', {
 											onChange: setNewTaskInput,
 											...rules.value
 										})}
@@ -84,8 +89,8 @@ export function ModalComponent() {
 										placeholder="Enter a task here..."
 										type="text"
 									/>
-									{errors.name && (
-										<span className="text-red-500 text-sm">{errors.name.message}</span>
+									{errors.title && (
+										<span className="text-red-500 text-sm">{errors.title.message}</span>
 									)}
 								</div>
 								<RadioGroupComponent
@@ -118,6 +123,7 @@ export function ModalComponent() {
 										/>
 									)}
 									<input
+										ref={imagePickerRef}
 										accept="image/png, image/gif, image/jpeg"
 										hidden
 										type="file"

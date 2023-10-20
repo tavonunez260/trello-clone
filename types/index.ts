@@ -5,6 +5,6 @@ export enum TypedColumn {
 }
 
 export type AddTaskForm = {
-	name: string;
-	type: TypedColumn | '';
+	title: string;
+	type: TypedColumn;
 };
