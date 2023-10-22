@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form';
 
 import { RadioGroupComponent, SpinnerComponent } from '@/components';
 import { rules } from '@/lib';
-import { useBoardStore, useModalStore } from '@/store';
+import { useBoardStore, useModalStore, useToastStore } from '@/store';
 import { AddTaskForm } from '@/types';
 
 export function ModalComponent() {
@@ -22,8 +22,9 @@ export function ModalComponent() {
 			state.setNewTaskInput,
 			state.setNewTaskType
 		]);
-	const [loading, setLoading] = useState(false);
+	const [runToast] = useToastStore(state => [state.runToast]);
 	const [isOpen, closeModal] = useModalStore(state => [state.isOpen, state.closeModal]);
+	const [loading, setLoading] = useState(false);
 	const imagePickerRef = useRef<HTMLInputElement | null>(null);
 	const {
 		control,
@@ -50,6 +51,7 @@ export function ModalComponent() {
 		setLoading(true);
 		addTask(data.title, data.type, data.image?.[0]).finally(() => {
 			setLoading(false);
+			runToast('Task created successfully', 'success');
 			closeModal();
 		});
 	};

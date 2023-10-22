@@ -21,6 +21,7 @@
     "react-beautiful-dnd": "^13.1.1",
     "react-dom": "^18",
     "react-hook-form": "^7.47.0",
+    "react-hot-toast": "^2.4.1",
     "redux-devtools-extension": "^2.13.9",
     "zustand": "^4.4.3"
   },

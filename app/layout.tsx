@@ -2,7 +2,7 @@ import './globals.css';
 
 import React from 'react';
 
-import { ModalComponent } from '@/components';
+import { ModalComponent, ToastComponent } from '@/components';
 
 import type { Metadata } from 'next';
 
@@ -18,6 +18,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 				<>
 					{children}
 					<ModalComponent />
+					<ToastComponent />
 				</>
 			</body>
 		</html>
