@@ -30,10 +30,13 @@ export const rules = {
 	},
 	file: {
 		validate: (file: File[] | null) => {
-			if (file && file[0].size <= 2 * 1024 * 1024) {
+			if (file === null) {
 				return true;
+			} else if (file && file[0].size <= 2 * 1024 * 1024) {
+				return true;
+			} else {
+				return 'File size should not exceed 2MB';
 			}
-			return 'File size should not exceed 2MB';
 		}
 	}
 };

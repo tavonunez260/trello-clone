@@ -8,7 +8,7 @@ import { TypedColumn } from '@/types';
 import { Board, Column, Todo } from '@/typings';
 
 interface BoardState {
-	addTask: (title: string, status: TypedColumn, image?: File | null) => void;
+	addTask: (title: string, status: TypedColumn, image?: File | null) => Promise<void>;
 	board: Board;
 	getBoard: () => Promise<void>;
 	image: File | null;
