@@ -27,6 +27,8 @@ interface BoardState {
 
 export const useBoardStore = create<BoardState>((set, getState) => ({
 	addTask: async (title: string, status: TypedColumn, image?: File | null) => {
+		const newDate = new Date().getTime();
+		const newOrder = getState().board.columns.get(status)!.todos.length;
 		let imageUrl = '';
 		if (image) {
 			const storage = getStorage();
@@ -38,9 +40,36 @@ export const useBoardStore = create<BoardState>((set, getState) => ({
 		await addDoc(collection(db, 'todos'), {
 			title,
 			status,
-			createdAt: new Date().getTime(),
-			order: getState().board.columns.get(status)?.todos.length,
+			createdAt: newDate,
+			order: newOrder,
 			image: imageUrl
+		}).then(response => {
+			set({ newTaskInput: '' });
+			set({ image: null });
+			set(state => {
+				const newColumns = new Map(state.board.columns);
+				const newTodo: Todo = {
+					createdAt: newDate,
+					id: response.id,
+					image: imageUrl,
+					order: newOrder,
+					status,
+					title
+				};
+				const column = newColumns.get(status);
+				if (!column) {
+					newColumns.set(status, {
+						id: status,
+						todos: [newTodo]
+					});
+				} else {
+					newColumns.get(status)?.todos.push(newTodo);
+				}
+
+				return {
+					board: { columns: newColumns }
+				};
+			});
 		});
 	},
 	board: {
