@@ -27,5 +27,13 @@ export const rules = {
 			value: true,
 			message: 'This field is required'
 		}
+	},
+	file: {
+		validate: (file: File[] | null) => {
+			if (file && file[0].size <= 2 * 1024 * 1024) {
+				return true;
+			}
+			return 'File size should not exceed 2MB';
+		}
 	}
 };

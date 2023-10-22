@@ -5,6 +5,7 @@ export enum TypedColumn {
 }
 
 export type AddTaskForm = {
+	image: File[] | null;
 	title: string;
 	type: TypedColumn;
 };

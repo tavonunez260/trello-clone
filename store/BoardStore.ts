@@ -3,7 +3,7 @@ import { getDownloadURL, getStorage, ref, uploadBytes } from '@firebase/storage'
 import { create } from 'zustand';
 
 import { db } from '@/firebase';
-import { getTodosGroupedByColumn } from '@/lib';
+import { getTodosGroupedByColumn, rules } from '@/lib';
 import { TypedColumn } from '@/types';
 import { Board, Column, Todo } from '@/typings';
 
@@ -70,7 +70,11 @@ export const useBoardStore = create<BoardState>((set, getState) => ({
 	newTaskType: TypedColumn.TO_DO,
 	setNewTaskType: (newTaskType: TypedColumn) => set({ newTaskType }),
 	image: null,
-	setImage: (image: File | null) => set({ image }),
+	setImage: (image: File | null) => {
+		if (image && rules.file.validate([image]) === true) {
+			set({ image });
+		}
+	},
 	updateOrder: (todos: Todo[]) => {
 		todos.forEach(async todo => {
 			const todoRef = doc(db, 'todos', todo.id);

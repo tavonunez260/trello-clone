@@ -3,7 +3,7 @@
 import { Dialog, Transition } from '@headlessui/react';
 import { PhotoIcon } from '@heroicons/react/24/solid';
 import Image from 'next/image';
-import { Fragment, useEffect, useRef } from 'react';
+import { ChangeEvent, Fragment, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { RadioGroupComponent } from '@/components';
@@ -23,21 +23,30 @@ export function ModalComponent() {
 			state.setNewTaskType
 		]);
 	const [isOpen, closeModal] = useModalStore(state => [state.isOpen, state.closeModal]);
-	const imagePickerRef = useRef<HTMLInputElement>(null);
+	const imagePickerRef = useRef<HTMLInputElement | null>(null);
 	const {
 		control,
 		formState: { errors },
 		handleSubmit,
 		register,
-		setValue
+		setValue,
+		trigger
+		// watch
 	} = useForm<AddTaskForm>({
 		defaultValues: {
-			title: newTaskInput
+			title: newTaskInput,
+			image: image ? [image] : null
 		}
+	});
+	const imageRegister = register('image', {
+		onChange: (event: ChangeEvent<HTMLInputElement>) => {
+			trigger('image').then(() => setImage(event.target.files![0]));
+		},
+		...rules.file
 	});
 
 	const onSubmit = (data: AddTaskForm) => {
-		addTask(data.title, data.type, image);
+		addTask(data.title, data.type, data.image?.[0]);
 	};
 
 	useEffect(() => {
@@ -123,14 +132,18 @@ export function ModalComponent() {
 										/>
 									)}
 									<input
-										ref={imagePickerRef}
+										{...imageRegister}
+										ref={event => {
+											imageRegister.ref(event);
+											imagePickerRef.current = event;
+										}}
 										accept="image/png, image/gif, image/jpeg"
 										hidden
 										type="file"
-										onChange={event => {
-											setImage(event.target.files![0]);
-										}}
 									/>
+									{errors.image && (
+										<span className="text-red-500 text-sm">{errors.image.message}</span>
+									)}
 									<div className="flex justify-center mt-4">
 										<button
 											className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:bg-gray-100 disabled:text-gray-300 disabled:cursor-not-allowed"

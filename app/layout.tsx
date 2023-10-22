@@ -1,5 +1,7 @@
 import './globals.css';
 
+import React from 'react';
+
 import { ModalComponent } from '@/components';
 
 import type { Metadata } from 'next';
@@ -12,8 +14,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
 	return (
 		<html lang="en">
-			<body className="bg-customGray">{children}</body>
-			<ModalComponent />
+			<body className="bg-customGray">
+				<>
+					{children}
+					<ModalComponent />
+				</>
+			</body>
 		</html>
 	);
 }
