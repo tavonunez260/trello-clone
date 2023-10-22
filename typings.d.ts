@@ -1,16 +1,21 @@
 import { TypedColumn } from '@/types';
 
+interface Image {
+	name: string;
+	url: string;
+}
+
 interface Todo {
 	createdAt: number;
 	id: string;
-	image?: string;
+	image?: Image | null;
 	order: number;
 	status: TypedColumn;
 	title: string;
 }
 
 interface TodoResponse {
-	data: { createdAt: number; image?: string; order: number; status: TypedColumn; title: string };
+	data: { createdAt: number; image?: Image; order: number; status: TypedColumn; title: string };
 	id: string;
 }
 

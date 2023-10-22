@@ -57,8 +57,16 @@ export function ModalComponent() {
 	};
 
 	useEffect(() => {
+		setValue('title', newTaskInput);
+	}, [newTaskInput, setValue]);
+
+	useEffect(() => {
 		setValue('type', newTaskType);
 	}, [newTaskType, setValue]);
+
+	useEffect(() => {
+		console.log(newTaskInput);
+	}, [newTaskInput]);
 
 	return (
 		// Use the `Transition` component at the root level
@@ -102,7 +110,9 @@ export function ModalComponent() {
 									<div className="w-full max-h-[400px] overflow-x-hidden overflow-y-auto">
 										<input
 											{...register('title', {
-												onChange: setNewTaskInput,
+												onChange: event => {
+													setNewTaskInput(event.target.value);
+												},
 												...rules.value
 											})}
 											className="w-full border border-gray-300 rounded-md outline-none p-5"
