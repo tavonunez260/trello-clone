@@ -5,4 +5,4 @@ export * from './ModalComponent';
 export * from './RadioGroupComponent';
 export * from './SpinnerComponent';
 export * from './ToastComponent';
-export * from './TodoCard';
+export * from './TodoCardComponent';

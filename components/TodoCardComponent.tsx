@@ -1,6 +1,7 @@
 'use client';
 
 import { PencilIcon, XCircleIcon } from '@heroicons/react/24/solid';
+import Image from 'next/image';
 import {
 	DraggableProvidedDraggableProps,
 	DraggableProvidedDragHandleProps
@@ -18,7 +19,7 @@ type TodoCardType = {
 	todo: Todo;
 };
 
-export function TodoCard({
+export function TodoCardComponent({
 	draggableProps,
 	dragHandleProps,
 	id,
@@ -44,6 +45,17 @@ export function TodoCard({
 					</button>
 				</div>
 			</div>
+			{todo.image && (
+				<div>
+					<Image
+						alt="Todo image"
+						className="w-full object-contain rounded-b-md"
+						height={200}
+						src={todo.image}
+						width={400}
+					/>
+				</div>
+			)}
 		</div>
 	);
 }

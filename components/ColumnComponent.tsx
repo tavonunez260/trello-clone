@@ -3,7 +3,7 @@
 import { PlusCircleIcon } from '@heroicons/react/24/solid';
 import { Draggable, Droppable } from 'react-beautiful-dnd';
 
-import { TodoCard } from '@/components';
+import { TodoCardComponent } from '@/components';
 import { useBoardStore, useModalStore } from '@/store';
 import { TypedColumn } from '@/types';
 import { Todo } from '@/typings';
@@ -65,7 +65,7 @@ export function ColumnComponent({ id, index, todos }: ColumnProps) {
 										return (
 											<Draggable key={todo.id} draggableId={todo.id} index={index}>
 												{provided => (
-													<TodoCard
+													<TodoCardComponent
 														draggableProps={provided.draggableProps}
 														dragHandleProps={provided.dragHandleProps}
 														id={id}
