@@ -10,7 +10,7 @@ import { Board, Column, Todo } from '@/typings';
 interface BoardState {
 	addTask: (title: string, status: TypedColumn, image?: File | null) => void;
 	board: Board;
-	getBoard: () => void;
+	getBoard: () => Promise<void>;
 	image: File | null;
 	newTaskInput: string;
 	newTaskType: TypedColumn;

@@ -1,13 +1,14 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { DragDropContext, Droppable, DropResult } from 'react-beautiful-dnd';
 
-import { ColumnComponent } from '@/components';
+import { ColumnComponent, SpinnerComponent } from '@/components';
 import { useBoardStore } from '@/store';
 import { Column } from '@/typings';
 
 export function BoardComponent() {
+	const [boardLoading, setBoardLoading] = useState(true);
 	const [board, getBoard, setBoardState, saveColumnOrder, updateOrder, updateTodoInDB] =
 		useBoardStore(state => [
 			state.board,
@@ -83,25 +84,33 @@ export function BoardComponent() {
 	};
 
 	useEffect(() => {
-		getBoard();
+		getBoard().finally(() => setBoardLoading(false));
 	}, [getBoard]);
 
 	return (
-		<DragDropContext onDragEnd={handleOnDragEnd}>
-			<Droppable direction="horizontal" droppableId="board" type="column">
-				{provided => (
-					<div
-						className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-7xl mx-auto"
-						{...provided.droppableProps}
-						ref={provided.innerRef}
-					>
-						{Array.from(board.columns.entries()).map(([id, column], index) => (
-							<ColumnComponent key={id} id={id} index={index} todos={column.todos} />
-						))}
-						{provided.placeholder}
-					</div>
-				)}
-			</Droppable>
-		</DragDropContext>
+		<>
+			{!boardLoading ? (
+				<DragDropContext onDragEnd={handleOnDragEnd}>
+					<Droppable direction="horizontal" droppableId="board" type="column">
+						{provided => (
+							<div
+								className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-7xl mx-auto"
+								{...provided.droppableProps}
+								ref={provided.innerRef}
+							>
+								{Array.from(board.columns.entries()).map(([id, column], index) => (
+									<ColumnComponent key={id} id={id} index={index} todos={column.todos} />
+								))}
+								{provided.placeholder}
+							</div>
+						)}
+					</Droppable>
+				</DragDropContext>
+			) : (
+				<div className="flex justify-center items-center h-[calc(100vh-105px)]">
+					<SpinnerComponent />
+				</div>
+			)}
+		</>
 	);
 }
