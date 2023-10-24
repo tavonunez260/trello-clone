@@ -41,6 +41,4 @@ export const rules = {
 	}
 };
 
-export const validateImage = (image: File): boolean => {
-	return rules.file.validate([image]) === true;
-};
+export const validateImage = (image: File): boolean => rules.file.validate([image]) === true;
