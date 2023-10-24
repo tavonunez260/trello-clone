@@ -43,7 +43,7 @@ export const getTodosGroupedByColumn = async () => {
 				title: todo.title,
 				status: todo.status,
 				order: todo.order,
-				...(todo.image && { image: todo.image })
+				image: todo.image
 			});
 		}
 		return acc;

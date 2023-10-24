@@ -3,70 +3,143 @@
 import { Dialog, Transition } from '@headlessui/react';
 import { PhotoIcon } from '@heroicons/react/24/solid';
 import Image from 'next/image';
-import { ChangeEvent, Fragment, useEffect, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { RadioGroupComponent, SpinnerComponent } from '@/components';
+import { useImageRegister } from '@/hooks';
 import { rules } from '@/lib';
 import { useBoardStore, useModalStore, useToastStore } from '@/store';
 import { AddTaskForm } from '@/types';
 
 export function ModalComponent() {
-	const [addTask, image, newTaskInput, newTaskType, setImage, setNewTaskInput, setNewTaskType] =
-		useBoardStore(state => [
-			state.addTask,
-			state.image,
-			state.newTaskInput,
-			state.newTaskType,
-			state.setImage,
-			state.setNewTaskInput,
-			state.setNewTaskType
-		]);
+	const [
+		addTask,
+		clearTaskToEdit,
+		isEdit,
+		image,
+		imageToEdit,
+		newTaskInput,
+		newTaskType,
+		setEdit,
+		setImageToEdit,
+		setNewImage,
+		setNewTaskInput,
+		setNewTaskType,
+		taskToEdit
+	] = useBoardStore(state => [
+		state.addTask,
+		state.clearTaskToEdit,
+		state.isEdit,
+		state.image,
+		state.imageToEdit,
+		state.newTaskInput,
+		state.newTaskType,
+		state.setEdit,
+		state.setImageToEdit,
+		state.setNewImage,
+		state.setNewTaskInput,
+		state.setNewTaskType,
+		state.taskToEdit
+	]);
+	const titleToEdit = taskToEdit?.title;
+	const typeToEdit = taskToEdit?.status;
+	const imageToEditFile = imageToEdit?.image;
+
 	const [runToast] = useToastStore(state => [state.runToast]);
 	const [isOpen, closeModal] = useModalStore(state => [state.isOpen, state.closeModal]);
 	const [loading, setLoading] = useState(false);
-	const imagePickerRef = useRef<HTMLInputElement | null>(null);
+
 	const {
+		clearErrors,
 		control,
 		formState: { errors },
 		handleSubmit,
 		register,
 		setValue,
 		trigger
-		// watch
 	} = useForm<AddTaskForm>({
 		defaultValues: {
-			title: newTaskInput,
-			image: image ? [image] : null
-		}
-	});
-	const imageRegister = register('image', {
-		onChange: (event: ChangeEvent<HTMLInputElement>) => {
-			trigger('image').then(() => setImage(event.target.files![0]));
+			title: titleToEdit || newTaskInput,
+			type: typeToEdit || newTaskType,
+			image: imageToEdit && imageToEdit.image ? [imageToEdit.image] : image ? [image] : null
 		},
-		...rules.file
+		mode: 'onChange'
+	});
+	const { imagePickerRef, imageRegister } = useImageRegister({
+		isEdit,
+		register,
+		setNewImage,
+		setImageToEdit,
+		taskToEdit,
+		trigger
 	});
 
-	const onSubmit = (data: AddTaskForm) => {
-		setLoading(true);
-		addTask(data.title, data.type, data.image?.[0]).finally(() => {
-			setLoading(false);
-			runToast('Task created successfully', 'success');
-			closeModal();
-		});
-	};
+	const getImageProps = useCallback(() => {
+		if (image && !isEdit) {
+			return {
+				src: URL.createObjectURL(image),
+				alt: 'Uploaded image'
+			};
+		} else if (imageToEdit && imageToEdit.image && isEdit) {
+			return {
+				src: URL.createObjectURL(imageToEdit.image),
+				alt: 'Uploaded image'
+			};
+		} else if (!imageToEdit && taskToEdit && taskToEdit.image && isEdit) {
+			return {
+				src: taskToEdit.image.url,
+				alt: 'Uploaded image'
+			};
+		}
+		return null;
+	}, [image, imageToEdit, isEdit, taskToEdit]);
+	const imageProps = getImageProps();
 
-	useEffect(() => {
-		setValue('title', newTaskInput);
-	}, [newTaskInput, setValue]);
+	const updateFormValuesBasedOnEditState = useCallback(() => {
+		if (isEdit) {
+			if (titleToEdit) {
+				setValue('title', titleToEdit);
+			}
+			setValue('image', imageToEditFile ? [imageToEditFile] : null);
+		} else {
+			setValue('title', newTaskInput);
+			setValue('image', image ? [image] : null);
+		}
+	}, [image, imageToEditFile, isEdit, newTaskInput, setValue, titleToEdit]);
 
-	useEffect(() => {
+	const updateFormTypeValue = useCallback(() => {
 		setValue('type', newTaskType);
 	}, [newTaskType, setValue]);
 
+	const onSubmit = useCallback(
+		(data: AddTaskForm) => {
+			setLoading(true);
+			addTask(data.title, data.type, data.image?.[0]).finally(() => {
+				setLoading(false);
+				runToast('Task created successfully', 'success');
+				closeModal();
+			});
+		},
+		[addTask, closeModal, runToast]
+	);
+
+	const handleCloseModal = useCallback(() => {
+		closeModal();
+		if (taskToEdit !== null) {
+			setEdit(false);
+			clearTaskToEdit();
+		}
+	}, [clearTaskToEdit, closeModal, setEdit, taskToEdit]);
+
 	useEffect(() => {
-		console.log(newTaskInput);
-	}, [newTaskInput]);
+		updateFormValuesBasedOnEditState();
+		updateFormTypeValue();
+	}, [updateFormValuesBasedOnEditState, updateFormTypeValue]);
+
+	useEffect(() => {
+		clearErrors();
+	}, [clearErrors, isEdit]);
 
 	return (
 		// Use the `Transition` component at the root level
@@ -74,7 +147,7 @@ export function ModalComponent() {
 			<Dialog
 				as="form"
 				className="relative z-10"
-				onClose={() => closeModal()}
+				onClose={handleCloseModal}
 				onSubmit={handleSubmit(onSubmit)}
 			>
 				<Transition.Child
@@ -111,7 +184,9 @@ export function ModalComponent() {
 										<input
 											{...register('title', {
 												onChange: event => {
-													setNewTaskInput(event.target.value);
+													if (!isEdit) {
+														setNewTaskInput(event.target.value);
+													}
 												},
 												...rules.value
 											})}
@@ -139,16 +214,12 @@ export function ModalComponent() {
 												<PhotoIcon className="h-6 w-6 mr-2 inline-block" />
 												Upload Image
 											</button>
-											{image && (
+											{imageProps && (
 												<Image
-													alt="Uploaded image"
+													{...imageProps}
 													className="w-full h-44 object-cover mt-2 filter hover:grayscale transition-all duration-150 cursor-not-allowed"
 													height={200}
-													src={URL.createObjectURL(image)}
 													width={200}
-													onClick={() => {
-														setImage(null);
-													}}
 												/>
 											)}
 											<input

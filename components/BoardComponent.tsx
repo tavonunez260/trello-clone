@@ -79,7 +79,7 @@ export function BoardComponent() {
 				});
 			}
 			setBoardState({ ...board, columns: newColumns });
-			updateTodoInDB(todoMoved, finishCol.id);
+			updateTodoInDB(todoMoved.id, finishCol.id);
 		}
 	};
 

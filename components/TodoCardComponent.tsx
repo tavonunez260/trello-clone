@@ -2,14 +2,14 @@
 
 import { PencilIcon, XCircleIcon } from '@heroicons/react/24/solid';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
 	DraggableProvidedDraggableProps,
 	DraggableProvidedDragHandleProps
 } from 'react-beautiful-dnd';
 
 import { SpinnerComponent } from '@/components/SpinnerComponent';
-import { useBoardStore, useToastStore } from '@/store';
+import { useBoardStore, useModalStore, useToastStore } from '@/store';
 import { TypedColumn } from '@/types';
 import { Todo } from '@/typings';
 
@@ -30,9 +30,37 @@ export function TodoCardComponent({
 	innerRef,
 	todo
 }: TodoCardType) {
-	const [deleteTask] = useBoardStore(state => [state.deleteTask]);
+	const [deleteTask, imageToEdit, setEdit, setImageToEdit, setNewTaskType, setTaskToEdit] =
+		useBoardStore(state => [
+			state.deleteTask,
+			state.imageToEdit,
+			state.setEdit,
+			state.setImageToEdit,
+			state.setNewTaskType,
+			state.setTaskToEdit
+		]);
+	const [openModal] = useModalStore(state => [state.openModal]);
 	const [runToast] = useToastStore(state => [state.runToast]);
 	const [loading, setLoading] = useState(false);
+
+	const handleEditTodo = useCallback(() => {
+		setEdit(true);
+		setTaskToEdit(todo);
+		setNewTaskType(id);
+		openModal();
+		if (imageToEdit && imageToEdit.id !== todo.id) {
+			setImageToEdit(null);
+		}
+	}, [id, imageToEdit, openModal, setEdit, setImageToEdit, setNewTaskType, setTaskToEdit, todo]);
+
+	const handleDeleteTodo = useCallback(() => {
+		setLoading(true);
+		deleteTask(index, todo, id)
+			.then(() => {
+				runToast('Task deleted successfully', 'success');
+			})
+			.finally(() => setLoading(false));
+	}, [deleteTask, id, index, runToast, todo]);
 
 	return (
 		<div
@@ -46,20 +74,10 @@ export function TodoCardComponent({
 					<div className="flex justify-between items-center py-5 px-3">
 						<p>{todo.title}</p>
 						<div className="flex gap-2">
-							<button className="text-blue-500 hover:text-blue-600">
+							<button className="text-blue-500 hover:text-blue-600" onClick={handleEditTodo}>
 								<PencilIcon className="h-7 w-7" />
 							</button>
-							<button
-								className="text-red-500 hover:text-red-600"
-								onClick={() => {
-									setLoading(true);
-									deleteTask(index, todo, id)
-										.then(() => {
-											runToast('Task deleted successfully', 'success');
-										})
-										.finally(() => setLoading(false));
-								}}
-							>
+							<button className="text-red-500 hover:text-red-600" onClick={handleDeleteTodo}>
 								<XCircleIcon className="h-8 w-8" />
 							</button>
 						</div>
