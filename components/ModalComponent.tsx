@@ -11,11 +11,13 @@ import { useImageRegister } from '@/hooks';
 import { rules } from '@/lib';
 import { useBoardStore, useModalStore, useToastStore } from '@/store';
 import { AddTaskForm } from '@/types';
+import { ImageType } from '@/typings';
 
 export function ModalComponent() {
 	const [
 		addTask,
 		clearTaskToEdit,
+		editTask,
 		isEdit,
 		image,
 		imageToEdit,
@@ -30,6 +32,7 @@ export function ModalComponent() {
 	] = useBoardStore(state => [
 		state.addTask,
 		state.clearTaskToEdit,
+		state.editTask,
 		state.isEdit,
 		state.image,
 		state.imageToEdit,
@@ -45,9 +48,12 @@ export function ModalComponent() {
 	const titleToEdit = taskToEdit?.title;
 	const typeToEdit = taskToEdit?.status;
 	const imageToEditFile = imageToEdit?.image;
+	const [currentEditImage, setCurrentEditImage] = useState<ImageType | null>(null);
 
 	const [runToast] = useToastStore(state => [state.runToast]);
+
 	const [isOpen, closeModal] = useModalStore(state => [state.isOpen, state.closeModal]);
+
 	const [loading, setLoading] = useState(false);
 
 	const {
@@ -86,27 +92,42 @@ export function ModalComponent() {
 				src: URL.createObjectURL(imageToEdit.image),
 				alt: 'Uploaded image'
 			};
-		} else if (!imageToEdit && taskToEdit && taskToEdit.image && isEdit) {
+		} else if (!imageToEdit && currentEditImage && isEdit) {
 			return {
-				src: taskToEdit.image.url,
-				alt: 'Uploaded image'
+				src: currentEditImage.url,
+				alt: currentEditImage.name
 			};
 		}
-		return null;
-	}, [image, imageToEdit, isEdit, taskToEdit]);
+	}, [image, imageToEdit, isEdit, currentEditImage]);
 	const imageProps = getImageProps();
 
-	const updateFormValuesBasedOnEditState = useCallback(() => {
+	const updateTitle = useCallback(() => {
 		if (isEdit) {
 			if (titleToEdit) {
 				setValue('title', titleToEdit);
 			}
-			setValue('image', imageToEditFile ? [imageToEditFile] : null);
 		} else {
 			setValue('title', newTaskInput);
+		}
+	}, [isEdit, newTaskInput, setValue, titleToEdit]);
+
+	const updateImage = useCallback(() => {
+		if (isEdit) {
+			setValue('image', imageToEditFile ? [imageToEditFile] : null);
+		} else {
 			setValue('image', image ? [image] : null);
 		}
-	}, [image, imageToEditFile, isEdit, newTaskInput, setValue, titleToEdit]);
+	}, [image, imageToEditFile, isEdit, setValue]);
+
+	const clearImage = useCallback(() => {
+		if (!isEdit) {
+			setNewImage(null);
+		} else if (isEdit && currentEditImage && !imageToEdit) {
+			setCurrentEditImage(null);
+		} else if (isEdit && imageToEdit) {
+			setImageToEdit(null);
+		}
+	}, [isEdit, currentEditImage, imageToEdit, setNewImage, setImageToEdit]);
 
 	const updateFormTypeValue = useCallback(() => {
 		setValue('type', newTaskType);
@@ -114,14 +135,27 @@ export function ModalComponent() {
 
 	const onSubmit = useCallback(
 		(data: AddTaskForm) => {
+			console.log(data);
 			setLoading(true);
-			addTask(data.title, data.type, data.image?.[0]).finally(() => {
-				setLoading(false);
-				runToast('Task created successfully', 'success');
-				closeModal();
-			});
+			if (!isEdit) {
+				addTask(data.title, data.type, data.image?.[0]).finally(() => {
+					setLoading(false);
+					runToast('Task created successfully', 'success');
+					closeModal();
+				});
+			} else {
+				if (taskToEdit) {
+					editTask(taskToEdit, data.title, data.type, data.image?.[0], currentEditImage).finally(
+						() => {
+							setLoading(false);
+							runToast('Task edited successfully', 'success');
+							closeModal();
+						}
+					);
+				}
+			}
 		},
-		[addTask, closeModal, runToast]
+		[addTask, closeModal, currentEditImage, editTask, isEdit, runToast, taskToEdit]
 	);
 
 	const handleCloseModal = useCallback(() => {
@@ -133,9 +167,20 @@ export function ModalComponent() {
 	}, [clearTaskToEdit, closeModal, setEdit, taskToEdit]);
 
 	useEffect(() => {
-		updateFormValuesBasedOnEditState();
+		updateTitle();
+	}, [updateTitle]);
+
+	useEffect(() => {
+		updateImage();
+	}, [updateImage]);
+
+	useEffect(() => {
 		updateFormTypeValue();
-	}, [updateFormValuesBasedOnEditState, updateFormTypeValue]);
+	}, [updateFormTypeValue]);
+
+	useEffect(() => {
+		setCurrentEditImage((taskToEdit && taskToEdit.image) || null);
+	}, [taskToEdit, taskToEdit?.image]);
 
 	useEffect(() => {
 		clearErrors();
@@ -216,10 +261,12 @@ export function ModalComponent() {
 											</button>
 											{imageProps && (
 												<Image
-													{...imageProps}
-													className="w-full h-44 object-cover mt-2 filter hover:grayscale transition-all duration-150 cursor-not-allowed"
+													alt={imageProps.alt}
+													className="w-full h-44 object-cover mt-2 filter hover:grayscale transition-all duration-150 cursor-pointer"
 													height={200}
+													src={imageProps.src}
 													width={200}
+													onClick={clearImage}
 												/>
 											)}
 											<input

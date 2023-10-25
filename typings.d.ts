@@ -19,6 +19,10 @@ interface Todo {
 	title: string;
 }
 
+interface TaskToEdit extends Todo {
+	index: number;
+}
+
 interface TodoResponse {
 	data: { createdAt: number; image?: ImageType; order: number; status: TypedColumn; title: string };
 	id: string;

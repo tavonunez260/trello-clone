@@ -45,7 +45,7 @@ export function TodoCardComponent({
 
 	const handleEditTodo = useCallback(() => {
 		setEdit(true);
-		setTaskToEdit(todo);
+		setTaskToEdit({ ...todo, index });
 		setNewTaskType(id);
 		openModal();
 		if (imageToEdit && imageToEdit.id !== todo.id) {
@@ -90,6 +90,7 @@ export function TodoCardComponent({
 								height={200}
 								src={todo.image.url}
 								width={400}
+								priority={true}
 							/>
 						</div>
 					)}

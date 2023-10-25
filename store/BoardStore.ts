@@ -5,13 +5,20 @@ import { create } from 'zustand';
 import { db } from '@/firebase';
 import { getTodosGroupedByColumn, validateImage } from '@/lib';
 import { TypedColumn } from '@/types';
-import { Board, Column, ImageToEditType, Todo } from '@/typings';
+import { Board, Column, ImageToEditType, ImageType, TaskToEdit, Todo } from '@/typings';
 
 interface BoardState {
 	addTask: (title: string, status: TypedColumn, image?: File | null) => Promise<void>;
 	board: Board;
 	clearTaskToEdit: () => void;
 	deleteTask: (taskIndex: number, todoId: Todo, id: TypedColumn) => Promise<void>;
+	editTask: (
+		todo: TaskToEdit,
+		title: string,
+		status: TypedColumn,
+		image?: File | null,
+		previousImage?: ImageType | null
+	) => Promise<void>;
 	getBoard: () => Promise<void>;
 	image: File | null;
 	imageToEdit: ImageToEditType | null;
@@ -26,15 +33,15 @@ interface BoardState {
 	setNewTaskInput: (value: string) => void;
 	setNewTaskType: (value: TypedColumn) => void;
 	setSearchString: (searchString: string) => void;
-	setTaskToEdit: (todo: Todo) => void;
-	taskToEdit: Todo | null;
+	setTaskToEdit: (todo: TaskToEdit) => void;
+	taskToEdit: TaskToEdit | null;
 	updateColumnOrder: (order: TypedColumn[]) => void;
 	updateOrder: (todos: Todo[]) => void;
 	updateTodoInDB: (todoId: string, columnId: TypedColumn) => void;
 }
 
 export const useBoardStore = create<BoardState>((set, get) => ({
-	addTask: async (title: string, status: TypedColumn, image?: File | null) => {
+	addTask: async (title, status, image) => {
 		const newDate = new Date().getTime();
 		const newOrder = get().board.columns.get(status)!.todos.length;
 		let imageUrl = '';
@@ -94,18 +101,61 @@ export const useBoardStore = create<BoardState>((set, get) => ({
 		columns: new Map<TypedColumn, Column>()
 	},
 	clearTaskToEdit: () => set({ taskToEdit: null }),
-	deleteTask: async (taskIndex: number, todoId: Todo, id: TypedColumn) => {
+	deleteTask: async (taskIndex, todoId, id) => {
 		if (todoId.image) {
 			const storage = getStorage();
 			const deleteRef = ref(storage, todoId.image.name);
 			await deleteObject(deleteRef);
 		}
 
-		deleteDoc(doc(db, 'todos', todoId.id)).then(() => {
-			const newColumns = new Map(get().board.columns);
-			newColumns.get(id)?.todos.splice(taskIndex, 1);
-			set({ board: { columns: newColumns } });
+		await deleteDoc(doc(db, 'todos', todoId.id));
+
+		const newColumns = new Map(get().board.columns);
+		newColumns.get(id)?.todos.splice(taskIndex, 1);
+		set({ board: { columns: newColumns } });
+	},
+	editTask: async (todo, title, status, image, previousImage) => {
+		const storage = getStorage();
+		let newImageUrl: string | undefined = '';
+		const deletePreviousImage = async () => {
+			if (previousImage) {
+				const deleteRef = ref(storage, previousImage.name);
+				await deleteObject(deleteRef);
+			}
+		};
+		const uploadImage = async () => {
+			if (image) {
+				const newTodoImageRef = ref(storage, `${image?.name}`);
+				await uploadBytes(newTodoImageRef, image);
+				return await getDownloadURL(newTodoImageRef);
+			}
+		};
+
+		if (previousImage) {
+			await deletePreviousImage();
+		}
+		if (image) {
+			newImageUrl = await uploadImage();
+		}
+
+		const todoRef = doc(db, 'todos', todo.id);
+		await updateDoc(todoRef, {
+			title,
+			status,
+			image: image ? { name: image.name, url: newImageUrl } : null
 		});
+
+		const newColumns = new Map(get().board.columns);
+		const targetTodoList = newColumns.get(status)?.todos;
+		if (targetTodoList) {
+			targetTodoList[todo.index] = {
+				...todo,
+				title,
+				status,
+				image: image ? { name: image.name, url: newImageUrl! } : null
+			};
+		}
+		set({ board: { columns: newColumns } });
 	},
 	getBoard: async () => {
 		const board = await getTodosGroupedByColumn();
@@ -117,9 +167,9 @@ export const useBoardStore = create<BoardState>((set, get) => ({
 	newTaskInput: '',
 	newTaskType: TypedColumn.TO_DO,
 	searchString: '',
-	setBoardState: (board: Board) => set({ board }),
-	setEdit: (isEdit: boolean) => set({ isEdit }),
-	setImageToEdit: (imageToEdit: ImageToEditType | null) => {
+	setBoardState: board => set({ board }),
+	setEdit: isEdit => set({ isEdit }),
+	setImageToEdit: imageToEdit => {
 		if (!imageToEdit) {
 			set({ imageToEdit: null });
 			return;
@@ -128,7 +178,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
 			set({ imageToEdit });
 		}
 	},
-	setNewImage: (image: File | null) => {
+	setNewImage: image => {
 		if (!image) {
 			set({ image: null });
 			return;
@@ -137,16 +187,16 @@ export const useBoardStore = create<BoardState>((set, get) => ({
 			set({ image });
 		}
 	},
-	setNewTaskInput: (newTaskInput: string) => set({ newTaskInput }),
-	setNewTaskType: (newTaskType: TypedColumn) => set({ newTaskType }),
-	setSearchString: (searchString: string) => set({ searchString }),
-	setTaskToEdit: (todo: Todo) => set({ taskToEdit: todo }),
+	setNewTaskInput: newTaskInput => set({ newTaskInput }),
+	setNewTaskType: newTaskType => set({ newTaskType }),
+	setSearchString: searchString => set({ searchString }),
+	setTaskToEdit: todo => set({ taskToEdit: todo }),
 	taskToEdit: null,
-	updateColumnOrder: async (order: TypedColumn[]) => {
+	updateColumnOrder: async order => {
 		const columnRef = doc(db, 'todos', 'orderId');
 		await updateDoc(columnRef, { order });
 	},
-	updateOrder: (todos: Todo[]) => {
+	updateOrder: todos => {
 		todos.forEach(async todo => {
 			const todoRef = doc(db, 'todos', todo.id);
 			await updateDoc(todoRef, {
