@@ -1,11 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-	// reactStrictMode: true,
+	output: 'export',
 	experimental: {
 		appDir: true
 	},
 	images: {
-		unoptimized: false,
+		unoptimized: true,
 		domains: ['links.papareact.com', 'firebasestorage.googleapis.com']
 	}
 };
