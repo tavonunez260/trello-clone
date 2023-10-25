@@ -51,7 +51,17 @@ export function TodoCardComponent({
 		if (imageToEdit && imageToEdit.id !== todo.id) {
 			setImageToEdit(null);
 		}
-	}, [id, imageToEdit, openModal, setEdit, setImageToEdit, setNewTaskType, setTaskToEdit, todo]);
+	}, [
+		id,
+		imageToEdit,
+		index,
+		openModal,
+		setEdit,
+		setImageToEdit,
+		setNewTaskType,
+		setTaskToEdit,
+		todo
+	]);
 
 	const handleDeleteTodo = useCallback(() => {
 		setLoading(true);
@@ -88,9 +98,9 @@ export function TodoCardComponent({
 								alt={todo.image.name}
 								className="w-full object-contain rounded-b-md"
 								height={200}
+								priority={true}
 								src={todo.image.url}
 								width={400}
-								priority={true}
 							/>
 						</div>
 					)}
