@@ -135,7 +135,6 @@ export function ModalComponent() {
 
 	const onSubmit = useCallback(
 		(data: AddTaskForm) => {
-			console.log(data);
 			setLoading(true);
 			if (!isEdit) {
 				addTask(data.title, data.type, data.image?.[0]).finally(() => {

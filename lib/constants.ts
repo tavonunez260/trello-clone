@@ -26,6 +26,10 @@ export const rules = {
 		required: {
 			value: true,
 			message: 'This field is required'
+		},
+		maxLength: {
+			value: 36,
+			message: 'Maximum 36 characters'
 		}
 	},
 	file: {
